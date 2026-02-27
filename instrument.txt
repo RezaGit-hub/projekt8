@@ -1,0 +1,89 @@
+das Datei .env zum sicherhet database: 
+DB_HOST=db
+DB_USER=postgres
+DB_PASSWORD=postgres
+DB_NAME=klinikum
+JWT_SECRET=geheimes_token
+
+
+Datei  environment.txt
+
+alle benötige bibiliotheken und strument soll derin sein:
+fastapi
+uvicorn
+psycopg2-binary
+python-dotenv
+bcrypt
+pyjwt
+
+
+Datei dockerfile:
+
+wie brücke zwischen Datei und docker, insbesonderes CMD für Anzeigen in Browser:
+
+FROM python:3.11
+
+WORKDIR /app
+
+COPY requirements.txt .
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+CMD ["python", "main.py",  "--host", "0.0.0.0", "--port", "8000"]
+
+
+Datei docker-compose.yml
+
+sehr wicjtig für docker build- so werde docker laufen:
+
+name : klinikum
+services:
+  db:
+    image: postgres:15
+    restart: always
+    environment: 
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD : ${DB_PASSWORD}
+      POSTGRES_DB : ${DB_NAME}
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  app:
+    build: .
+    restart : always
+    env_file:
+      - .env
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app  #erlaubt code Änderungen
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+volumes:
+  db_data:
+
+
+wenn alles fertig ist , dann in shell:
+
+docker compose up --build -d
+docker ps(um sicher sein , dass alles klappt)
+docker logs klinikum-app-1 (so läuft docker in browser)
+docker -p klinikum-app-1 down (macht es docker aus)
+
+
+Datei main.py
+
+haupteil des projekts:
+from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.get("/")
+def root():
+    return {"message" : "klinikum backend lüft"}
