@@ -87,3 +87,117 @@ app = FastAPI()
 @app.get("/")
 def root():
     return {"message" : "klinikum backend lüft"}
+
+Datei app.database.py
+
+es wird benutzt um die connection aufbaeun
+import os
+import psycopg2
+from dotenv import load_dotenv
+
+load_dotenv()
+
+def get_connection():
+   return psycopg2.connect(
+	host=ps.getenv("DB_HOST"),
+	user=os.getenv("DB_USER"),
+	password=os.getenv("DB_PASSWORD"),
+	dbname0os.getenv)"DB_NAME")
+)
+
+dann sollte in main.py auch importieren: main.py:
+from fastapi import fastApi
+from app.database import get_connection
+
+app = fastApi()
+
+@app.get("/")
+def root():
+	conn = get_connection()
+	conn.close()
+	return {"message" : 2DB CONNECTION ERFOLGREICJ"}
+
+dann in shell:  docker logs klinikum-app-1 und sollte in browser message gezeigt werden.
+
+
+dann erstellen wir die Tabellen . alle mit Foreign key on delete die siehen so aus:
+init_db.py:  from app.database import get_connection
+
+def create_table():
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """CREATE TABLE IF NOT EXISTS doctors(
+        id SERIAL PRIMARY KEY,
+        first_name VARCHAR(50) NOT NULL,
+        last_name VARCHAR(50) NOT NULL,
+        specialization VARCHAR(60),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)"""
+    )
+
+    conn.commit()
+    
+    cursor.execute(
+        """CREATE TABLE IF NOT EXISTS patients(
+        id SERIAL PRIMARY KEY,
+        first_name VARCHAR(50) NOT NULL,
+        last_name VARCHAR(50) NOT NULL,
+        birth_date DATE NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)"""
+    )
+    conn.commit()
+
+    cursor.execute(
+        """CREATE TABLE IF NOT EXISTS appointments(
+        id SERIAL PRIMARY KEY,
+        patient_id INTEGER REFERENCES patients(id) ON DELETE CASCADE,
+        doctor_id INTEGER REFERENCES doctors(id) ON DELETE SET NULL,
+        appointment_date TIMESTAMP NOT NULL,
+        reason text,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)"""
+    )
+
+    conn.commit()
+    cursor.close()
+    conn.close()    
+nachher soll main.py wieder aktuellisert werden:
+import fastapi fropm fastApi
+from app.init_db.py import create_table
+
+app = fastApi()
+
+@app.on_event("startup")
+def startup():
+	create_table()
+@app.get("/")
+def root():
+	return {"message": "DB connection erfolgreich"}
+
+nachehr machen wir patient API:
+POST /patients → Patient anlegen
+
+GET /patients → Alle Patienten holen
+
+GET /patients/{id} → Einzelnen Patient holen
+
+DELETE /patients/{id} → Löschen
+
+
+dann erstellen neue Datei Patient.py um zu patient verwalten zu können:
+
+from fastapi import APIRouter, HTTPException
+from app.databse import get_connection
+from datetime import date
+
+router = APIRouter()
+
+def create_patient(first_name: str, last_name: str, birth_date: date):
+	conn= get_connection()
+	cursor = conn.cursor()
+	cursor.execute("""INSERT INTO patient(first_name, last_name, birth_date) VALUES 
+	(%s,%s,%s) RETURNING id)""",
+	(first_name, last_name, birth_date)
+	)
+	new_id = cursor.fetchhole()[0]
+

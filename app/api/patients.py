@@ -41,7 +41,7 @@ def get_patients():
     return rows
 
 #READ ONE PATIENT
-@router.get("/patients")
+@router.get("/patients/{patient_id}")
 def get_patient(patient_id :int):
     conn = get_connection()
     cursor = conn.cursor()
@@ -57,9 +57,21 @@ def get_patient(patient_id :int):
         raise HTTPException(status_code=404, detail="patient nicht gefunden")
     return patient
 
+#READ ONE PATIENT WITH LASTNAME
+@router.get("/patients/{last_name}")
+def get_patient_lastname(last_name):
+    conn = get_connection()
+    Cursor = conn.cursor()
+    Cursor.execute("SELECT * FROM patients WHERE last_name = %s", (last_name,))
+
+    patient = Cursor.fetchall()
+    Cursor.close()
+    conn.close()
+    return patient
+
 
 #DELET
-@router.delete("/patients")
+@router.delete("/patients/{patient_id}")
 def delete_patient(patient_id: int):
     conn = get_connection()
     cursor = conn.cursor()
