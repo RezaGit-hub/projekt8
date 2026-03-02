@@ -1,0 +1,94 @@
+from fastapi import APIRouter, HTTPException
+from app.database import get_connection
+from datetime import date
+
+router = APIRouter()
+
+#CREAT NEW APPINTMENT
+@router.post("/appointments")
+def creat_appointments(patient_id, doctor_id, appointment_date: date):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """INSERT INTO appointments(patient_id, doctor_id, appointment_date)
+        VALUES(%s,%s, %s) RETURNING id""",
+        (patient_id, doctor_id, appointment_date)
+    )
+
+    new_appointment = cursor.fetchone()[0]
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return {"id":new_appointment, "message": "appointment wurd erstellet"}
+
+#READ ALL APPOINTMENTS
+@router.get("/appointments")
+def get_appointments():
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM appointments")
+
+    appointments = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+    return appointments
+
+#READ ONE APPOINTMENT WITH PATIENT_ID
+@router.get("/appointments/{patient_id}")
+def get_appointments_patient(patient_id: int):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM appointments WHERE patient_id = %s",
+                   (patient_id, )
+                   )
+
+    appo = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    if not appo:
+        raise HTTPException(status_code=404, detail="patient hat keine Termin")
+    return appo
+
+#READ APPOINTMNETS WITH DOCTOR_ID 
+@router.get("/appointments/{doctor_id}")
+def get_appointment_doctor(doctor_id: int):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "SELECT * FROM appointments WHERE doctor_id = %s",
+        (doctor_id,)
+    )
+
+    appo = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    if not appo:
+        raise HTTPException(status_code=404, detail="doctor hat keinen Termin")
+    return appo
+
+
+#DELETE ONE APPOINTMENT
+@router.delete("/appointments/{appointmnet_id}")
+def delete_appointment(appointment_id):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "DELETE FROM appointments WHERE id = %s RETURNING id",
+        (appointment_id,)
+    )
+
+    deleted = cursor.fetchone()
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    if not deleted:
+        raise HTTPException(status_code=404, detail="es gibt keine Termin")
+    return {"message": "Termin gelöscht"}

@@ -1,12 +1,13 @@
 from fastapi import APIRouter, HTTPException
 from app.database import get_connection
 from datetime import date
+from app.schemas.patient import PatientCreate, PatientResponse
 
 router = APIRouter()
 
 #Create
-@router.post("/patients")
-def create_patient(first_name: str, last_name: str, birth_date: date):
+@router.post("/patients", response_model=PatientResponse)
+def create_patient(patient : PatientCreate):
     conn = get_connection()
     cursor = conn.cursor()
 
@@ -14,15 +15,17 @@ def create_patient(first_name: str, last_name: str, birth_date: date):
         """INSERT INTO patients(first_name, last_name, birth_date)
         VALUES (%s,%s,%s)
         RETURNING id""",
-        (first_name, last_name, birth_date)
+        (patient.first_name, patient.last_name, patient.birth_date)
     )
 
-    new_id = cursor.fetchone()[0]
+    new_patient = cursor.fetchone()
     conn.commit()
-    cursor.close()
-    conn.close()
+    
 
-    return {"id": new_id, "message": "patient erstellt"}
+    return {"id": new_patient[0],
+            "first_name:": new_patient[1],
+            "last_name": new_patient[2],
+            "birth_date": new_patient[3]}
 
 
 #READ ALL
