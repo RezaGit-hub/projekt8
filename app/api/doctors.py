@@ -1,43 +1,57 @@
 from fastapi import APIRouter, HTTPException
 from app.database import get_connection
-
+from app.schemas.doctors import DoctorCreate, DoctorResponse
+from typing import List
 
 router = APIRouter()
 
 #CREAT NEW DOKTOR
-@router.post("/doctors")
-def create_doctors(first_name: str, last_name: str, specialization: str):
+@router.post("/doctors", response_model= DoctorResponse)
+def create_doctors(doctors : DoctorCreate):
     conn = get_connection()
     cursor= conn.cursor()
 
     cursor.execute(
         """INSERT INTO doctors(first_name, last_name, specialization)
-        VALUES(%s, %s, %s) RETURNING id""",
-        (first_name, last_name, specialization)
+        VALUES(%s, %s, %s) RETURNING id, first_name, last_name, specialization""",
+        (doctors.first_name, doctors.last_name, doctors.specialization)
     )
 
-    new_id = cursor.fetchone()[0]
+    new_id = cursor.fetchone()
 
     conn.commit()
-    cursor.close()
-    conn.close()
-    return {"id": new_id, "message": "doctor erstellt"}
+    
+    return {"id": new_id[0], 
+            "first_name" : new_id[1],
+            "last_name": new_id[2],
+            "specialization" : new_id[3] 
+            }
 
 #READ ALL DOCTORS
-@router.get("/doctors")
+@router.get("/doctors", response_model= List[DoctorResponse])
 def get_doctors():
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM doctors")
+    cursor.execute("SELECT id, first_name , last_name , specialization  FROM doctors")
 
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
-    return rows
+
+    doctors = []
+    for row in rows:
+        doctors.append({
+            "id": row[0],
+            "first_name": row[1],
+            "last_name": row[2],
+            "specialization": row[3]
+        })
+
+    return doctors
 
 #READ ONE DOCTOR WITH ID
 @router.get("/doctors/{doctor_id}")
-def get_doctor(doctor_id):
+def get_doctor(doctor_id:int):
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM doctors WHERE id = %s",
@@ -54,7 +68,7 @@ def get_doctor(doctor_id):
 
 #READ DOCTOR WITH NAME
 @router.get("/doctors/{last_name}")
-def get_doctorsname(last_name):
+def get_doctorsname(last_name:str):
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM doctors WHERE last_name = %s",
