@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from app.database import get_connection
-from app.schemas.doctors import DoctorCreate, DoctorResponse
+from app.schemas.doctors import DoctorCreate, DoctorResponse, DoctorUpdate
 from typing import List
 
 router = APIRouter()
@@ -80,6 +80,36 @@ def get_doctorsname(last_name:str):
     conn.close()
 
     return doctorsname
+
+#UPDTAE DOCTOR
+@router.put("/doctors/{doctor_id}", response_model=DoctorResponse)
+def update_doctor(doctor_id :int, doctor: DoctorUpdate):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """UPDATE doctors
+        SET first_name = COALESCE(%s, first_name),
+        last_name = COALESCE(%s, last_name),
+        specialization = COALESCE(%s, specialization)
+        WHERE id = %s
+        RETURNING id , first_name, last_name, specialization""",
+        (doctor.first_name, doctor.last_name, doctor.specialization, doctor_id)
+    )
+    updated= cursor.fetchone()
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    if not updated:
+        raise HTTPException(status_code=404, detail="doctor nicht gefunden")
+
+    return{"id" : updated[0],
+           "first_name": updated[1],
+           "last_name": updated[2],
+           "specialization": updated[3]
+           } 
 
 #DELETE ONE DOCTOR
 @router.delete("/doctors/{doctor_id}")

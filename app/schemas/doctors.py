@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import Optional
 
 
 class DoctorCreate(BaseModel):
@@ -15,3 +16,8 @@ class DoctorResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class DoctorUpdate(BaseModel):
+    first_name : Optional[str] = None
+    last_name : Optional[str] = None
+    specialization : Optional[str] = None
