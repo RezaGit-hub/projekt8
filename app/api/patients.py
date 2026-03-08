@@ -1,33 +1,47 @@
 from fastapi import APIRouter, HTTPException
 from app.database import get_connection
 from datetime import date
-from app.schemas.patient import PatientCreate, PatientResponse
+from app.schemas.patient import PatientCreate, PatientResponse, PatientUpdate
 from typing import List
 
 router = APIRouter()
 
 #Create
 @router.post("/patients", response_model=PatientResponse)
-def create_patient(patient : PatientCreate):
+def create_patient(patient: PatientCreate):
     conn = get_connection()
     cursor = conn.cursor()
 
-    cursor.execute(
-        """INSERT INTO patients(first_name, last_name, birth_date)
-        VALUES (%s,%s,%s)
-        RETURNING id, first_name, last_name, birth_date""",
-        (patient.first_name, patient.last_name, patient.birth_date)
-    )
+    try:
+        cursor.execute(
+            """
+            INSERT INTO patients (first_name, last_name, birth_date)
+            VALUES (%s, %s, %s)
+            RETURNING id, first_name, last_name, birth_date
+            """,
+            (patient.first_name, patient.last_name, patient.birth_date)
+        )
 
-    new_patient = cursor.fetchone()
-    conn.commit()
-    
+        new_patient = cursor.fetchone()
+        conn.commit()
 
-    return {"id": new_patient[0],
+        if not new_patient:
+            raise HTTPException(status_code=500, detail="Insert fehlgeschlagen")
+
+        return {
+            "id": new_patient[0],
             "first_name": new_patient[1],
             "last_name": new_patient[2],
-            "birth_date": new_patient[3]}
+            "birth_date": new_patient[3]
+        }
 
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+    finally:
+        cursor.close()
+        conn.close()
 
 #READ ALL
 @router.get("/patients",  response_model= List[PatientResponse])
@@ -81,6 +95,37 @@ def get_patient_lastname(last_name):
     cursor.close()
     conn.close()
     return patient
+
+#UPDATE
+@router.put("/patients/{patients_id}", response_model=PatientResponse)
+def update_patient(patient_id: int, patient: PatientUpdate):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """UPDATE patients
+        SET first_name = COALESCE(%s, first_name),
+        last_name = COALESCE(%s, last_name),
+        birth_date = COALESCE(%s, birth_date)
+        WHERE id =%s
+        RETURNING id, first_name, last_name, birth_date""",
+        (patient.first_name, patient.last_name, patient.birth_date, patient_id)
+    )
+
+    updated = cursor.fetchone()
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    if not updated:
+        raise HTTPException(status_code=404, detail="patient nicht gefunden")
+    return{
+         "id": updated[0],
+         "first_name": updated[1],
+         "last_name" : updated[2],
+         "birth_date": updated[3]
+     }
 
 
 #DELET
