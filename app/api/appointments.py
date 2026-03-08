@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from app.database import get_connection
 from datetime import date
-from app.schemas.appointments import AppointmentCreate, AppointmentResponse
+from app.schemas.appointments import AppointmentCreate, AppointmentResponse, AppointmentUpdate
 from typing import List
 
 router = APIRouter()
@@ -87,6 +87,36 @@ def get_appointment_doctor(doctor_id: int):
         raise HTTPException(status_code=404, detail="doctor hat keinen Termin")
     return appo
 
+#UPDATE APPOINTMENT
+@router.put("/appointments/{appointment_id}", response_model=AppointmentResponse)
+def update_appointment(appointment_id: int, appointment: AppointmentUpdate):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """UPDATE appointments
+        SET patient_id = COALESCE(%s, patient_id),
+        doctor_id = COALESCE(%s, doctor_id),
+        appointment_date = COALESCE(%s, appointment_date)
+        WHERE "id" = %s
+        RETURNING id, patient_id, doctor_id, appointment_date""",
+        (appointment.patient_id, appointment.doctor_id, appointment.appointment_date, appointment_id)
+    )
+
+    updated= cursor.fetchone()
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    if not updated:
+        raise HTTPException(status_code=404, detail="appointment nicht gefunden")
+    
+    return{
+        "id" : updated[0],
+        "patient_id": updated[1],
+        "doctor_id": updated[2],
+        "appointment_date": updated[3]
+    }
 
 #DELETE ONE APPOINTMENT
 @router.delete("/appointments/{appointmnet_id}")
