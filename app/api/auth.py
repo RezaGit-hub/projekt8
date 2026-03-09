@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from app.schemas.user import UserCreate , UserLogin
 from app.database import get_connection
-from app.services.auth_services import hash_password
+from app.services.auth_services import hash_password, verify_password, create_access_token
 
 router = APIRouter()
 
@@ -33,7 +33,6 @@ def register(user: UserCreate):
         "role" : new_user[2]
     }
 
-from app.services.auth_services import verify_password, create_access_token
 
 @router.post("/login")
 def login(user: UserLogin):
@@ -43,7 +42,7 @@ def login(user: UserLogin):
 
     cursor.execute(
         "SELECT id, email, password_hash, role FROM users WHERE email=%s",
-        (user.email)
+        (user.email,)
     )
 
     db_user = cursor.fetchone()
@@ -55,7 +54,7 @@ def login(user: UserLogin):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
     if not verify_password(user.password, db_user[2]):
-        raise HTTPException(status_code=401, detail="Invalid credebtials")
+        raise HTTPException(status_code=401, detail="Invalid credentials")
     
     token = create_access_token(
         {"user_id": db_user[0], "role": db_user[3]}
