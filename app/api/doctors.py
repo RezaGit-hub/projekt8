@@ -1,13 +1,18 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from app.database import get_connection
 from app.schemas.doctors import DoctorCreate, DoctorResponse, DoctorUpdate
 from typing import List
+from app.services.auth_dependencies import get_current_user
 
 router = APIRouter()
 
 #CREAT NEW DOKTOR
 @router.post("/doctors", response_model= DoctorResponse)
-def create_doctors(doctors : DoctorCreate):
+def create_doctors(doctors : DoctorCreate, current_user = Depends(get_current_user)):
+
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="not authorized")
+    
     conn = get_connection()
     cursor= conn.cursor()
 
