@@ -46,12 +46,22 @@ def create_patient(patient: PatientCreate):
 
 #READ ALL
 @router.get("/patients", response_model=List[PatientResponse])
-def get_patients(user=Depends(get_current_user)):
+def get_patients(current_user=Depends(get_current_user),
+                 page : int = 1,
+                 limit: int = 10,
+                 ):
+    offset = (page - 1)* limit
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="not authorized")
     conn = get_connection()
     cursor = conn.cursor()
 
     cursor.execute(
-        "SELECT id, first_name, last_name, birth_date FROM patients"
+        """SELECT id, first_name, last_name, birth_date 
+        FROM patients
+        ORDER BY id
+        LIMIT %s OFFSET %s""",
+        (limit, offset)
     )
     rows = cursor.fetchall()
     cursor.close()
