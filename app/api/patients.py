@@ -1,8 +1,9 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from app.database import get_connection
 from datetime import date
 from app.schemas.patient import PatientCreate, PatientResponse, PatientUpdate
 from typing import List
+from app.services.auth_dependencies import get_current_user
 
 router = APIRouter()
 
@@ -44,8 +45,8 @@ def create_patient(patient: PatientCreate):
         conn.close()
 
 #READ ALL
-@router.get("/patients",  response_model= List[PatientResponse])
-def get_patients():
+@router.get("/patients", response_model=List[PatientResponse])
+def get_patients(user=Depends(get_current_user)):
     conn = get_connection()
     cursor = conn.cursor()
 
