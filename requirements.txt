@@ -1,6 +1,11 @@
+python-dotenv
+
+pyjwt
+
 fastapi
 uvicorn
 psycopg2-binary
-python-dotenv
-bcrypt
-pyjwt
+passlib[bcrypt]
+python-jose
+pydantic[email]
+email-validator
