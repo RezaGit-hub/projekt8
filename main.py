@@ -14,4 +14,4 @@ def startup():
 app.include_router(patient_router)
 app.include_router(doctor_router)
 app.include_router(appointment_router)
-app.include_router(auth.router)
+app.include_router(auth.router, prefix="/auth", tags=["auth"])

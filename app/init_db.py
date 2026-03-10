@@ -42,14 +42,14 @@ def create_table():
         id SERIAL PRIMARY KEY,
         email VARCHAR(100) UNIQUE NOT NULL,
         password_hash TEXT NOT NULL,
-
-        role VARCHAR(20) DEFAULT 'user',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)
-        """
+        role VARCHAR(50) DEFAULT 'user',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )"""
     )
 
-   
     conn.commit()
+
+
     
 
     cursor.close()
