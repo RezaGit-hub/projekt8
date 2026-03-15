@@ -9,7 +9,12 @@ router = APIRouter()
 
 #Create
 @router.post("/patients", response_model=PatientResponse)
-def create_patient(patient: PatientCreate):
+def create_patient(patient: PatientCreate, current_user = Depends(get_current_user)):
+    
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=401, detail="not authorization")
+    
+    
     conn = get_connection()
     cursor = conn.cursor()
 
