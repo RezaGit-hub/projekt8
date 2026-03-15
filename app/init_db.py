@@ -4,26 +4,9 @@ def create_table():
     conn = get_connection()
     cursor = conn.cursor()
 
-    cursor.execute(
-        """CREATE TABLE IF NOT EXISTS doctors(
-        id SERIAL PRIMARY KEY,
-        first_name VARCHAR(50) NOT NULL,
-        last_name VARCHAR(50) NOT NULL,
-        specialization VARCHAR(60),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)"""
-    )
-
-    conn.commit()
     
-    cursor.execute(
-        """CREATE TABLE IF NOT EXISTS patients(
-        id SERIAL PRIMARY KEY,
-        first_name VARCHAR(50) NOT NULL,
-        last_name VARCHAR(50) NOT NULL,
-        birth_date DATE NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)"""
-    )
-    conn.commit()
+    
+
 
     cursor.execute(
         """CREATE TABLE IF NOT EXISTS appointments(
