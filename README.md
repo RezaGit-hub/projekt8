@@ -1,116 +1,103 @@
-# projekt8
-PostgreSQL /SQLAlchemy /Alembic /FastAPI/ Docker Compose
-Clinic Management API
-Project Overview
+#projekt8
+PostgreSQL /Alembic /FastAPI/ Docker Compose
 
-This project is a REST API for managing:
+# Klinikum-Backend-API
 
-Patients
+Bei diesem Projekt handelt es sich um eine Backend-REST-API zur Verwaltung eines kleinen klinischen Systems.
+Es wurde entwickelt, um Backend-Entwicklungskonzepte wie Datenbankdesign, Authentifizierung und Containerumgebungen zu üben.
 
-Doctors
+## Technologien
 
-Appointments
+* Python
+* FastAPI
+* PostgreSQL
+* Docker und Docker Compose
+* JWT-Authentifizierung
+* Alembic (Datenbankmigrationen)
 
-Built with:
+## Funktionen
 
-FastAPI
+* Patientenmanagement
+* Ärztemanagement
+* Terminvereinbarung
+* Benutzerauthentifizierung mit JWT
+* Rollenbasierte Zugriffskontrolle (Administrator / Benutzer)
+* Paginierung für API-Endpunkte
+* Datenbankindizierung für mehr Leistung
+* Datenbankmigrationen mit Alembic
 
-PostgreSQL
+## Projektstruktur
 
-Docker
+„
+App/
+  API/
+      patienten.py
+      Ärzte.py
+      Termine.py
+      auth.py
 
-Pydantic
+  Schemata/
+      patient.py
+      doctor.py
+      Termin.py
+      user.py
 
-Uvicorn
+  Dienstleistungen/
+      auth_services.py
 
-Architecture
+  Datenbank.py
 
-FastAPI backend
+Destillierkolben/
+  Versionen/
 
-PostgreSQL database
+main.py
+docker-compose.yml
+Anforderungen.txt
+„
 
-Docker containerized setup
+## Das Projekt ausführen
 
-Separate schema models (Create / Response)
+### Starten Sie die Container
 
-Clean API routing
+„
+Docker komponieren --build
+„
 
-Database Structure
-Patients
+Die API wird verfügbar sein unter:
 
-id (SERIAL PRIMARY KEY)
-
-first_name (VARCHAR)
-
-last_name (VARCHAR)
-
-birth_date (DATE)
-
-created_at (TIMESTAMP)
-
-Doctors
-
-id
-
-first_name
-
-last_name
-
-specialization
-
-Appointments
-
-id
-
-patient_id (FK)
-
-doctor_id (FK)
-
-appointment_date
-
-How to Run the Project
-docker-compose up --build
-
-API available at:
-
+„
 http://localhost:8000
+„
 
-Swagger documentation:
+API-Dokumentation:
 
+„
 http://localhost:8000/docs
-Implemented Endpoints
-Patients
+„
 
-POST /patients
+## Datenbank
 
-GET /patients
+Das Projekt verwendet PostgreSQL in Docker.
 
-GET /patients/id/{id}
+Table:
 
-GET /patients/lastname/{lastname}
+* Benutzer
+* Patienten
+* Ärzte
+* Termine
 
-DELETE /patients/{id}
+## Authentifizierung
 
-Doctors
+Die Authentifizierung erfolgt mit JWT-Tokens.
 
-CRUD implemented
+Durchfluss:
 
-Appointments
+1. Registrieren Sie einen Benutzer
+2. Anmelden
+3. JWT-Token empfangen
+4. Verwenden Sie das Token, um auf geschützte Endpunkte zuzugreifen
 
-Basic structure implemented
 
-Features
+---
 
-Response validation using Pydantic
-
-Structured API routing
-
-Dockerized environment
-
-Database relations with foreign keys
-
-Error handling with HTTPException
-
-Current Status
-
-MVP completed.
+Dieses Projekt wurde im Rahmen des Backend-Lernens und der Vorbereitung auf die berufliche Weiterentwicklung erstellt.
