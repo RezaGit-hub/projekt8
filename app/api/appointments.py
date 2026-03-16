@@ -13,9 +13,9 @@ def creat_appointments(appointments: AppointmentCreate):
     cursor = conn.cursor()
 
     cursor.execute(
-        """INSERT INTO appointments(patient_id, doctor_id, appointment_date)
-        VALUES(%s,%s, %s) RETURNING id, patient_id, doctor_id, appointment_date""",
-        (appointments.patient_id, appointments.doctor_id, appointments.appointment_date)
+        """INSERT INTO appointments(patient_id, doctor_id, appointment_date, reason)
+        VALUES(%s,%s, %s, %s) RETURNING id, patient_id, doctor_id, appointment_date, reason""",
+        (appointments.patient_id, appointments.doctor_id, appointments.appointment_date, appointments.reason)
     )
 
     new_appointment = cursor.fetchone()
@@ -26,15 +26,16 @@ def creat_appointments(appointments: AppointmentCreate):
     return {"id":new_appointment[0],
             "patient_id": new_appointment[1],
             "doctor_id": new_appointment[2],
-            "appointment_date": new_appointment[3]}
+            "appointment_date": new_appointment[3],
+            "reason": new_appointment[4]}
 
 #READ ALL APPOINTMENTS
-@router.get("/appointments", response_model=list[AppointmentResponse])
+@router.get("/appointments", response_model=List[AppointmentResponse])
 def get_appointments():
     conn = get_connection()
     cursor = conn.cursor()
 
-    cursor.execute("SELECT id, patient_id, doctor_id, appointment_date FROM appointments")
+    cursor.execute("SELECT id, patient_id, doctor_id, appointment_date, reason FROM appointments")
 
     rows = cursor.fetchall()
     cursor.close()
@@ -46,7 +47,8 @@ def get_appointments():
             "id": row[0],
             "patient_id": row[1],
             "doctor_id": row[2],
-            "appointment_date" : row[3]
+            "appointment_date" : row[3],
+            "reason" : row[4]
 
         })
     
@@ -97,10 +99,11 @@ def update_appointment(appointment_id: int, appointment: AppointmentUpdate):
         """UPDATE appointments
         SET patient_id = COALESCE(%s, patient_id),
         doctor_id = COALESCE(%s, doctor_id),
-        appointment_date = COALESCE(%s, appointment_date)
+        appointment_date = COALESCE(%s, appointment_date),
+        reason = COALESCE(%s, reason)
         WHERE "id" = %s
-        RETURNING id, patient_id, doctor_id, appointment_date""",
-        (appointment.patient_id, appointment.doctor_id, appointment.appointment_date, appointment_id)
+        RETURNING id, patient_id, doctor_id, appointment_date, reason""",
+        (appointment.patient_id, appointment.doctor_id, appointment.appointment_date, appointment.reason,  appointment_id)
     )
 
     updated= cursor.fetchone()
@@ -115,12 +118,13 @@ def update_appointment(appointment_id: int, appointment: AppointmentUpdate):
         "id" : updated[0],
         "patient_id": updated[1],
         "doctor_id": updated[2],
-        "appointment_date": updated[3]
+        "appointment_date": updated[3],
+        "reason": updated[4]
     }
 
 #DELETE ONE APPOINTMENT
-@router.delete("/appointments/{appointmnet_id}")
-def delete_appointment(appointment_id):
+@router.delete("/appointments/{appointment_id}")
+def delete_appointment(appointment_id: int):
     conn = get_connection()
     cursor = conn.cursor()
 
@@ -136,4 +140,4 @@ def delete_appointment(appointment_id):
 
     if not deleted:
         raise HTTPException(status_code=404, detail="es gibt keine Termin")
-    return {"message": "Termin gelöscht"}
+    return {"deleted_id": deleted[0]}

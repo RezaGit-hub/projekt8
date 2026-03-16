@@ -6,7 +6,7 @@ class AppointmentCreate(BaseModel):
     patient_id: int
     doctor_id: int
     appointment_date: date
-    reason: str
+    reason: Optional[str] = None
 
 
 class AppointmentResponse(BaseModel):
@@ -14,7 +14,7 @@ class AppointmentResponse(BaseModel):
     patient_id: int
     doctor_id: int
     appointment_date: date
-    reason: str
+    reason: Optional[str] = None
 
 
     class Config:
